@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Orchestrator Service (API Gateway replacement)
+  orchestrator-service:
+    build:
+      context: ./orchestrator-service
+    ports:
+      - "8000:5000"
+      - "5678:5678"  # Debug port
+    volumes:
+      - ./orchestrator-service:/app
+    environment:
+      - SEARCH_SERVICE_URL=http://search-service:5001
+      - USER_HISTORY_SERVICE_URL=http://user-history-service:5002
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    networks:
+      - search-network
+    depends_on:
+      - search-service
+      - user-history-service
+
+  # Search Service
+  search-service:
+    build:
+      context: ./search-service
+    ports:
+      - "5001:5001"
+      - "5679:5679"  # Debug port
+    volumes:
+      - ./search-service:/app
+    environment:
+      - SEARCH_SERVICE_ENDPOINT=${SEARCH_SERVICE_ENDPOINT}
+      - INDEX_NAME=${INDEX_NAME}
+      - ADMIN_KEY=${ADMIN_KEY}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    networks:
+      - search-network
+
+  # User & History Service
+  user-history-service:
+    build:
+      context: ./user-history-service
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./user-history-service:/app
+    environment:
+      - DATABASE_URL=postgresql://ab021470@host.docker.internal/biomed_search
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    networks:
+      - search-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  search-network:
+    driver: bridge 

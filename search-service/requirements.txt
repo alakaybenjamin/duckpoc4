@@ -1,0 +1,6 @@
+fastapi==0.95.1
+uvicorn==0.22.0
+python-dotenv==1.0.0
+azure-identity==1.13.0
+azure-search-documents==11.4.0
+httpx==0.24.0 
